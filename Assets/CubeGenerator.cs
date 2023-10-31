@@ -5,26 +5,28 @@ using UnityEngine;
 public class CubeGenerator : MonoBehaviour
 {
     public float cubeSideLength;
-
-
     public Vector3 cubeCenter;
     public Vector3 cubeRotation;
     public Material cubeMaterial;
-
     public float focalLength;
+
+    // Add a rotation speed for the X and Y axes.
+    public float rotationSpeedX;
+    public float rotationSpeedY;
 
     public Vector2 RotateBy(float angle, float axis1, float axis2)
     {
         var firstAxis = axis1 * Mathf.Cos(angle) - axis2 * Mathf.Sin(angle);
-            var secondAxis = axis2 * Mathf.Cos(angle) + axis1 * Mathf.Sin(angle);
+        var secondAxis = axis2 * Mathf.Cos(angle) + axis1 * Mathf.Sin(angle);
         return new Vector2(firstAxis, secondAxis);
     }
 
     public Vector3[] GetFrontSquare()
     {
-        var halfLength = cubeSideLength * .5f;
+        var halfLength = cubeSideLength * 0.5f;
 
-        return new[] { 
+        return new[]
+        {
             new Vector3(cubeCenter.x + halfLength, cubeCenter.y + halfLength, -halfLength),
             new Vector3(cubeCenter.x - halfLength, cubeCenter.y + halfLength, -halfLength),
             new Vector3(cubeCenter.x - halfLength, cubeCenter.y - halfLength, -halfLength),
@@ -34,9 +36,10 @@ public class CubeGenerator : MonoBehaviour
 
     public Vector3[] GetBackSquare()
     {
-        var halfLength = cubeSideLength * .5f;
+        var halfLength = cubeSideLength * 0.5f;
 
-        return new[] {
+        return new[]
+        {
             new Vector3(cubeCenter.x + halfLength, cubeCenter.y + halfLength, halfLength),
             new Vector3(cubeCenter.x - halfLength, cubeCenter.y + halfLength, halfLength),
             new Vector3(cubeCenter.x - halfLength, cubeCenter.y - halfLength, halfLength),
@@ -44,11 +47,20 @@ public class CubeGenerator : MonoBehaviour
         };
     }
 
+    private void Update()
+    {
+        // Rotate the cube in X and Y axes using time-based rotation.
+        float rotationX = cubeRotation.x + rotationSpeedX * Time.deltaTime;
+        float rotationY = cubeRotation.y + rotationSpeedY * Time.deltaTime;
+
+        // Update the cubeRotation vector.
+        cubeRotation = new Vector3(rotationX, rotationY, cubeRotation.z);
+    }
+
     private void OnPostRender()
     {
         DrawLines();
     }
-
 
     private void OnDrawGizmos()
     {
@@ -57,8 +69,7 @@ public class CubeGenerator : MonoBehaviour
 
     public void DrawLines()
     {
-
-        if(cubeMaterial == null)
+        if (cubeMaterial == null)
         {
             return;
         }
@@ -69,10 +80,9 @@ public class CubeGenerator : MonoBehaviour
         var backsquareVectors = GetBackSquare();
 
         //z axis rotation front square
-        var halfLength = cubeSideLength * .5f;
+        var halfLength = cubeSideLength * 0.5f;
         for (int i = 0; i < squareVectors.Length; i++)
         {
-
             var deductedVector = cubeCenter - squareVectors[i];
             var rotatedVectors = RotateBy(cubeRotation.z, deductedVector.x, deductedVector.y);
             squareVectors[i] = new Vector3(rotatedVectors.x, rotatedVectors.y) + cubeCenter;
@@ -81,63 +91,42 @@ public class CubeGenerator : MonoBehaviour
         // z axis back square
         for (int i = 0; i < backsquareVectors.Length; i++)
         {
-
             var deductedVector = cubeCenter - backsquareVectors[i];
             var rotatedVectors = RotateBy(cubeRotation.z, deductedVector.x, deductedVector.y);
             backsquareVectors[i] = new Vector3(rotatedVectors.x, rotatedVectors.y) + cubeCenter;
-            
         }
 
-
-        var frontScale = focalLength / ((cubeCenter.z - cubeSideLength * .5f) + focalLength);
-        for (int i = 0; i < squareVectors.Length; i++) 
+        var frontScale = focalLength / ((cubeCenter.z - cubeSideLength * 0.5f) + focalLength);
+        for (int i = 0; i < squareVectors.Length; i++)
         {
-
-
             GL.Color(cubeMaterial.color);
             var point1 = squareVectors[i] * frontScale;
-            
             GL.Vertex3(point1.x, point1.y, 0);
             Debug.Log(point1);
-            var point2 = squareVectors[(i + 1)% squareVectors.Length] * frontScale;
-
+            var point2 = squareVectors[(i + 1) % squareVectors.Length] * frontScale;
             GL.Vertex3(point2.x, point2.y, 0);
-
         }
 
-        
-        
-        var backScale =  focalLength/((cubeCenter.z + cubeSideLength * .5f) + focalLength);
+        var backScale = focalLength / ((cubeCenter.z + cubeSideLength * 0.5f) + focalLength);
         for (int i = 0; i < backsquareVectors.Length; i++)
         {
-
-
             GL.Color(cubeMaterial.color);
             var point1 = backsquareVectors[i] * backScale;
             GL.Vertex3(point1.x, point1.y, 0);
             var point2 = backsquareVectors[(i + 1) % squareVectors.Length] * backScale;
             GL.Vertex3(point2.x, point2.y, 0);
-
         }
 
         for (int i = 0; i < backsquareVectors.Length; i++)
         {
-
-
             GL.Color(cubeMaterial.color);
             var point1 = squareVectors[i] * frontScale;
             GL.Vertex3(point1.x, point1.y, 0);
             var point2 = backsquareVectors[i] * backScale;
             GL.Vertex3(point2.x, point2.y, 0);
-
         }
-
 
         GL.End();
         GL.PopMatrix();
     }
-
-
-
-
 }
